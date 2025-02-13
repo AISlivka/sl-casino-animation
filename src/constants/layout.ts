@@ -1,0 +1,2 @@
+export const RESPONSE_WINDOW_WIDTH_LG = 1024;
+export const RESPONSE_WINDOW_WIDTH_MD = 599;
