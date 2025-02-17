@@ -1,104 +1,164 @@
-
 <template>
-  <div class="container">
-    <button @click="animateBall">Запустить анимацию</button>
-    <img ref="ballRef" class="ball"
-         src="@/assets/img/ImgBall.png" />
-    <img ref="batRef" class="bat"
-         src="@/assets/img/ImgBat.png" />
+  <div class="video-container">
+    <div class="video-container-ball">
+      <img ref="ballRef" class="ball" src="@/assets/img/ImgBall.png" />
+    </div>
+    <div class="video-container-bat">
+      <img ref="batRef" class="bat" src="@/assets/img/ImgBat.png" />
+    </div>
+  </div>
+  <div class="active">
+    <button class="active-button" @click="animateBall">Кнопка активации</button>
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import gsap from "gsap";
+import { ref } from 'vue';
+import gsap from 'gsap';
 
-// Ссылки на элементы
 const ballRef = ref<HTMLElement | null>(null);
 const batRef = ref<HTMLElement | null>(null);
 
-// Исходные позиции мяча
-const startX = window.innerWidth - 100;
-const startY = 100;
-
-// Функция анимации
 const animateBall = () => {
-  if (!ballRef.value || !batRef.value) return;
+  if (!ballRef.value || !batRef.value) {
+    return;
+  }
 
   const ball = ballRef.value;
   const bat = batRef.value;
-
-  // Анимация движения мяча: диагональ вниз влево → отскок → вверх влево
   const tl = gsap.timeline();
 
-// Бесконечное вращение мяча
-  gsap.to(ball, {
-    rotation: -360, // Полный оборот
-    duration: 0.3, // Скорость вращения
-    repeat: -1, // Бесконечный повтор
-    ease: "linear", // Равномерное вращение
+  // 1. Первая анимация мяча
+  tl.to(ball, {
+    x: '-30vw',
+    y: '20vw',
+    rotation: -1080,
+    duration: 0.6,
+    ease: 'power1.in',
   });
 
-  tl.to(ball, {
-    x: -600, // Мяч летит влево
-    y: 350, // Мяч летит вниз
-    duration: 0.6,
-    ease: "power1.in",
-  })
-    .to(ball, {
-      x: -1100, // Еще левее
-      y: 200, // Подпрыгивает вверх
+  // 2. Вторая анимация мяча + Одновременное начало анимации биты
+  tl.to(
+    ball,
+    {
+      x: '-60vw',
+      y: '8vw',
+      rotation: -1500,
       duration: 0.6,
-      ease: "power1.out",
-    })
-    .to(ball, {
-      x: -1240, // Еще левее
-      y: 230, // Подпрыгивает вверх
-      duration: 0.7,
-      onStart: () => { // Исправлено: `toStart` → `onStart`
-        gsap.to(bat, {
-          rotation: -180,
-          duration: 0.6,
-          ease: "power3.inOut",
-        });
-      }
-    })
-    .to(ball, {
-      x: 0, // Возвращается в начальное положение
-      y: startY,
-      duration: 1,
-      ease: "power3.out",
-    })
-    .to(bat, {
-      rotation: 0, // Возвращаем биту в исходное положение
-      duration: 0.8,
-      ease: "power2.inOut",
-    })
-}
+      ease: 'power1.out',
+    },
+    '>', // Запускаем сразу после первой анимации мяча
+  );
+
+  tl.to(
+    bat,
+    {
+      rotation: -190,
+      duration: 1.1, // Включает вторую и третью анимации мяча
+      ease: 'power3.inOut',
+    },
+    '<', // Бита запускается одновременно со второй анимацией мяча
+  );
+
+  // 3. Третья анимация мяча + Окончание анимации биты
+  tl.to(
+    ball,
+    {
+      x: '-70vw',
+      y: '10vw',
+      rotation: -1800,
+      duration: 0.5, // Подбираем так, чтобы мяч и бита завершили движение одновременно
+    },
+    '-=0.5', // Стартует на 0.5s раньше, чтобы синхронизироваться с битой
+  );
+
+  // 4. Четвертая анимация мяча
+  tl.to(ball, {
+    x: 0,
+    y: '-25vw',
+    rotation: 0,
+    duration: 0.7,
+    ease: 'power3.out',
+  });
+
+  // 5. Возвращаем биту обратно после завершения всей анимации мяча
+  tl.to(bat, {
+    rotation: 0,
+    duration: 0.8,
+    ease: 'power2.inOut',
+  });
+};
 </script>
 
-<style scoped>
-.container {
+<style lang="postcss" scoped>
+.video-container {
   position: relative;
-  width: 100vw;
-  height: 500px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
-  background-color: #f0f0f0;
+  background-color: #0e0901;
+
+  &::before {
+    content: '';
+    background-image: url('@/assets/img/ImgBackPublic.png');
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 23vw;
+  }
+
+  &::after {
+    content: '';
+    background-image: url('@/assets/img/ImgBackField.png');
+    background-position: bottom;
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 29vw;
+  }
+}
+
+.video-container-ball {
+  position: absolute;
+  bottom: 35%;
+  right: 5vw;
+  width: 7vw;
+  height: 7vw;
+  z-index: 2;
 }
 
 .ball {
+  width: 100%;
+  height: 100%;
+}
+
+.video-container-bat {
   position: absolute;
-  width: 50px;
-  height: 50px;
-  right: 100px;
-  top: 100px;
+  top: 50%;
+  left: 3vw;
+  transform: translateY(-52%);
+  width: 18vw;
+  height: auto;
+  z-index: 1;
 }
 
 .bat {
-  width: 150px;
-  height: auto;
-  position: absolute;
-  top: 70px;
+  width: 100%;
+  height: 100%;
+}
+
+.active {
+  width: 100%;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.active-button {
+  padding: 12px;
 }
 </style>
