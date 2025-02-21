@@ -18,12 +18,33 @@ const batRef = ref<HTMLElement | null>(null);
 
 onMounted(() => {
   if (ballRef.value && batRef.value) {
-    gsap.to(ballRef.value, {
+    const ball = ballRef.value;
+
+    gsap.to(ball, {
       y: '-20vw',
       duration: 0.6,
       repeat: -1,
       yoyo: true,
       ease: 'power1.out',
+      onUpdate() {
+        if (this.progress() < 0.05) {
+          // Деформация мяча при приземлении
+          gsap.to(ball, {
+            scaleX: 1.4,
+            scaleY: 0.6,
+            duration: 0.1,
+            ease: 'power1.inOut',
+            onComplete() {
+              gsap.to(ball, {
+                scaleX: 1,
+                scaleY: 1,
+                duration: 0.7,
+                ease: 'elastic.out(1, 0.5)',
+              });
+            },
+          });
+        }
+      },
     });
 
     gsap.to(batRef.value, {
