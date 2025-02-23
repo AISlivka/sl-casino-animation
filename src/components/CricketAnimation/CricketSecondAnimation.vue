@@ -1,6 +1,27 @@
 <template>
   <div ref="cricketRef" class="cricket">
     <div class="cricket-container">
+      <div class="cricket-schedule">
+        <svg
+          ref="lineRef"
+          class="trajectory"
+          viewBox="0 0 250 180"
+          width="100%"
+          height="100%"
+        >
+          <path
+            d="M1 150 Q 250 150, 260 0 L 260 180 L 1 180 Z"
+            fill="#3E1111"
+          />
+          <path
+            d="M1 150 Q 250 150, 260 0"
+            stroke="#FE7E7E"
+            fill="none"
+            stroke-width="2"
+            stroke-dasharray="330"
+          />
+        </svg>
+      </div>
       <div class="cricket-container-ball">
         <img ref="ballRef" class="ball" src="@/assets/img/ImgBall.png" />
       </div>
@@ -23,15 +44,18 @@ import gsap from 'gsap';
 const ballRef = ref<HTMLElement | null>(null);
 const batRef = ref<HTMLElement | null>(null);
 const cricketRef = ref<HTMLElement | null>(null);
+const lineRef = ref<SVGSVGElement | null>(null);
 
 const animateBall = () => {
-  if (!ballRef.value || !batRef.value || !cricketRef.value) {
+  if (!ballRef.value || !batRef.value || !cricketRef.value || !lineRef.value) {
     return;
   }
 
   const ball = ballRef.value;
   const bat = batRef.value;
   const cricket = cricketRef.value;
+  const path = lineRef.value.querySelector('path');
+
   const tl = gsap.timeline();
 
   // 1. Первая анимация мяча
@@ -43,18 +67,19 @@ const animateBall = () => {
     ease: 'power1.in',
   });
 
+  // 2. Удар биты
   tl.to(
     bat,
     {
       rotation: 15,
       duration: 0.5,
-      x: '3vw', // Небольшой сдвиг, чтобы компенсировать смену оси
+      x: '3vw',
       ease: 'power3.inOut',
     },
-    '<', // Бита запускается одновременно со второй анимацией мяча
+    '<',
   );
 
-  // 2. Вторая анимация мяча + Одновременное начало анимации биты
+  // 3. Вторая анимация мяча
   tl.to(
     ball,
     {
@@ -64,7 +89,7 @@ const animateBall = () => {
       duration: 0.6,
       ease: 'power1.out',
     },
-    '>', // Запускаем сразу после первой анимации мяча
+    '>',
   );
 
   tl.to(
@@ -74,23 +99,25 @@ const animateBall = () => {
       y: '-4vw',
       rotation: -190,
       duration: 0.6,
-      scale: 1, // Возвращаем обратно
       ease: 'power3.in',
     },
-    '<', // Бита запускается одновременно со второй анимацией мяча
+    '<',
   );
 
-  tl.to(
-    bat,
-    {
-      rotation: -360,
-      duration: 0.3,
-      ease: 'power2.out',
-    },
-    '>', // Происходит после основного удара биты
-  );
+  // 4. Появление линии траектории
+  if (path) {
+    tl.to(
+      path,
+      {
+        strokeDashoffset: 0,
+        duration: 1.2,
+        ease: 'power2.out',
+      },
+      '>',
+    );
+  }
 
-  // 3. Отлет мяча сразу после удара (не ждёт конца анимации биты)
+  // 5. Отлет мяча вверх
   tl.to(
     ball,
     {
@@ -102,7 +129,7 @@ const animateBall = () => {
     '<',
   );
 
-  // 4. вращение мяча
+  // 6. Вращение мяча
   tl.to(
     ball,
     {
@@ -129,11 +156,24 @@ const animateBall = () => {
 </script>
 
 <style lang="postcss" scoped>
+.trajectory {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .cricket {
   position: relative;
 
   &.is_active {
     & .cricket-container {
+      .cricket-schedule {
+        display: block;
+      }
+
       &::before {
         top: -100%;
         transform: none;
@@ -156,6 +196,14 @@ const animateBall = () => {
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background-color: #0e0901;
+
+  .cricket-schedule {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    bottom: -9vw;
+  }
 
   &::before {
     content: '';
@@ -231,8 +279,33 @@ const animateBall = () => {
 </style>
 
 <!--<template>-->
-<!--  <div class="cricket">-->
+<!--  <div ref="cricketRef" class="cricket">-->
 <!--    <div class="cricket-container">-->
+<!--      &lt;!&ndash; Линия траектории &ndash;&gt;-->
+<!--      <div class="cricket-schedule">-->
+<!--        <svg-->
+<!--          ref="lineRef"-->
+<!--          class="trajectory"-->
+<!--          viewBox="0 0 250 180"-->
+<!--          width="100%"-->
+<!--          height="100%"-->
+<!--        >-->
+<!--          &lt;!&ndash; Заполняем область под графиком желтым &ndash;&gt;-->
+<!--          <polygon-->
+<!--            points="0,180 250,180 250,0 0,0"-->
+<!--            fill="yellow"-->
+<!--            stroke="none"-->
+<!--          />-->
+<!--          <path-->
+<!--            d="M1 180 Q 250 180, 260 0"-->
+<!--            stroke="red"-->
+<!--            fill="none"-->
+<!--            stroke-width="2"-->
+<!--            stroke-dasharray="330"-->
+<!--            stroke-dashoffset="330"-->
+<!--          />-->
+<!--        </svg>-->
+<!--      </div>-->
 <!--      <div class="cricket-container-ball">-->
 <!--        <img ref="ballRef" class="ball" src="@/assets/img/ImgBall.png" />-->
 <!--      </div>-->
@@ -254,14 +327,19 @@ const animateBall = () => {
 
 <!--const ballRef = ref<HTMLElement | null>(null);-->
 <!--const batRef = ref<HTMLElement | null>(null);-->
+<!--const cricketRef = ref<HTMLElement | null>(null);-->
+<!--const lineRef = ref<SVGSVGElement | null>(null);-->
 
 <!--const animateBall = () => {-->
-<!--  if (!ballRef.value || !batRef.value) {-->
+<!--  if (!ballRef.value || !batRef.value || !cricketRef.value || !lineRef.value) {-->
 <!--    return;-->
 <!--  }-->
 
 <!--  const ball = ballRef.value;-->
 <!--  const bat = batRef.value;-->
+<!--  const cricket = cricketRef.value;-->
+<!--  const path = lineRef.value.querySelector('path');-->
+
 <!--  const tl = gsap.timeline();-->
 
 <!--  // 1. Первая анимация мяча-->
@@ -273,18 +351,19 @@ const animateBall = () => {
 <!--    ease: 'power1.in',-->
 <!--  });-->
 
+<!--  // 2. Удар биты-->
 <!--  tl.to(-->
 <!--    bat,-->
 <!--    {-->
 <!--      rotation: 15,-->
 <!--      duration: 0.5,-->
-<!--      x: '3vw', // Небольшой сдвиг, чтобы компенсировать смену оси-->
+<!--      x: '3vw',-->
 <!--      ease: 'power3.inOut',-->
 <!--    },-->
-<!--    '<', // Бита запускается одновременно со второй анимацией мяча-->
+<!--    '<',-->
 <!--  );-->
 
-<!--  // 2. Вторая анимация мяча + Одновременное начало анимации биты-->
+<!--  // 3. Вторая анимация мяча-->
 <!--  tl.to(-->
 <!--    ball,-->
 <!--    {-->
@@ -294,7 +373,7 @@ const animateBall = () => {
 <!--      duration: 0.6,-->
 <!--      ease: 'power1.out',-->
 <!--    },-->
-<!--    '>', // Запускаем сразу после первой анимации мяча-->
+<!--    '>',-->
 <!--  );-->
 
 <!--  tl.to(-->
@@ -304,56 +383,96 @@ const animateBall = () => {
 <!--      y: '-4vw',-->
 <!--      rotation: -190,-->
 <!--      duration: 0.6,-->
-<!--      scale: 1, // Возвращаем обратно-->
 <!--      ease: 'power3.in',-->
 <!--    },-->
-<!--    '<', // Бита запускается одновременно со второй анимацией мяча-->
+<!--    '<',-->
 <!--  );-->
 
-<!--  tl.to(-->
-<!--    bat,-->
-<!--    {-->
-<!--      rotation: -360,-->
-<!--      duration: 0.3,-->
-<!--      ease: 'power2.out',-->
-<!--    },-->
-<!--    '>', // Происходит после основного удара биты-->
-<!--  );-->
+<!--  // 4. Появление линии траектории-->
+<!--  if (path) {-->
+<!--    tl.to(-->
+<!--      path,-->
+<!--      {-->
+<!--        strokeDashoffset: 0,-->
+<!--        duration: 1.2,-->
+<!--        ease: 'power2.out',-->
+<!--      },-->
+<!--      '>',-->
+<!--    );-->
+<!--  }-->
 
-<!--  // 3. Отлет мяча сразу после удара (не ждёт конца анимации биты)-->
+<!--  // 5. Отлет мяча вверх-->
 <!--  tl.to(-->
 <!--    ball,-->
 <!--    {-->
 <!--      x: '0vw',-->
 <!--      y: '-25vw',-->
-<!--      rotation: 500,-->
 <!--      duration: 0.5,-->
 <!--      ease: 'power3.out',-->
 <!--    },-->
 <!--    '<',-->
 <!--  );-->
 
-<!--  // 4. мяч на исходную-->
-<!--  tl.to(ball, {-->
-<!--    x: 0,-->
-<!--    y: 0,-->
-<!--    duration: 0,-->
-<!--  });-->
+<!--  // 6. Вращение мяча-->
+<!--  tl.to(-->
+<!--    ball,-->
+<!--    {-->
+<!--      rotation: 860,-->
+<!--      duration: 1.5,-->
+<!--      repeat: -1,-->
+<!--      ease: 'linear',-->
+<!--    },-->
+<!--    '<',-->
+<!--  );-->
 
-<!--  // 5. биту на исходную-->
-<!--  tl.to(bat, {-->
-<!--    x: 0,-->
-<!--    y: 0,-->
-<!--    rotation: 0,-->
-<!--    duration: 0.8,-->
-<!--    ease: 'power2.inOut',-->
-<!--  });-->
+<!--  tl.to(-->
+<!--    bat,-->
+<!--    {-->
+<!--      x: '-100vw',-->
+<!--      y: '50vw',-->
+<!--      duration: 1.5,-->
+<!--      ease: 'power2.in',-->
+<!--      onStart: () => cricket.classList.add('is_active'),-->
+<!--    },-->
+<!--    '<',-->
+<!--  );-->
 <!--};-->
 <!--</script>-->
 
 <!--<style lang="postcss" scoped>-->
+<!--.trajectory {-->
+<!--  position: absolute;-->
+<!--  top: 0;-->
+<!--  left: 0;-->
+<!--  width: 100%;-->
+<!--  height: 100%;-->
+<!--  pointer-events: none;-->
+<!--}-->
+
 <!--.cricket {-->
 <!--  position: relative;-->
+
+<!--  &.is_active {-->
+<!--    & .cricket-container {-->
+<!--      .cricket-schedule {-->
+<!--        display: block;-->
+<!--      }-->
+
+<!--      &::before {-->
+<!--        top: -100%;-->
+<!--        transform: none;-->
+<!--      }-->
+
+<!--      &::after {-->
+<!--        bottom: -100%;-->
+<!--      }-->
+<!--    }-->
+
+<!--    & .cricket-active {-->
+<!--      opacity: 0;-->
+<!--      visibility: hidden;-->
+<!--    }-->
+<!--  }-->
 <!--}-->
 
 <!--.cricket-container {-->
@@ -361,6 +480,10 @@ const animateBall = () => {
 <!--  aspect-ratio: 16 / 9;-->
 <!--  overflow: hidden;-->
 <!--  background-color: #0e0901;-->
+
+<!--  .cricket-schedule {-->
+<!--    display: none;-->
+<!--  }-->
 
 <!--  &::before {-->
 <!--    content: '';-->
@@ -373,6 +496,7 @@ const animateBall = () => {
 <!--    transform: translateY(-50%);-->
 <!--    width: 100%;-->
 <!--    height: 23vw;-->
+<!--    transition: 1.5s ease-in-out;-->
 <!--  }-->
 
 <!--  &::after {-->
@@ -385,6 +509,7 @@ const animateBall = () => {
 <!--    bottom: 0;-->
 <!--    width: 100%;-->
 <!--    height: 29vw;-->
+<!--    transition: 1.5s ease-in-out;-->
 <!--  }-->
 <!--}-->
 
@@ -423,6 +548,9 @@ const animateBall = () => {
 <!--  text-align: center;-->
 <!--  position: absolute;-->
 <!--  top: 16px;-->
+<!--  opacity: 1;-->
+<!--  visibility: visible;-->
+<!--  transition: 1s ease-in-out;-->
 <!--}-->
 
 <!--.cricket-active-button {-->
