@@ -177,8 +177,8 @@ const animateBall = () => {
     ballBoom,
     {
       scale: 1.7,
-      duration: 0.2,
-      ease: 'linear.out',
+      duration: 1.2,
+      ease: 'elastic.out(1, 0.25)',
     },
     '-=0.2',
   );
