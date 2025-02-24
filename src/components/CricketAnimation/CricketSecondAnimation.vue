@@ -25,6 +25,9 @@
       <div class="cricket-container-ball">
         <img ref="ballRef" class="ball" src="@/assets/img/ImgBall.png" />
       </div>
+      <div class="cricket-container-ball _boom">
+        <img ref="ballBoomRef" class="ball" src="@/assets/img/ImgBoom.png" />
+      </div>
       <div class="cricket-container-bat">
         <img ref="batRef" class="bat" src="@/assets/img/ImgBat.png" />
       </div>
@@ -42,6 +45,7 @@ import { ref } from 'vue';
 import gsap from 'gsap';
 
 const ballRef = ref<HTMLElement | null>(null);
+const ballBoomRef = ref<HTMLElement | null>(null);
 const batRef = ref<HTMLElement | null>(null);
 const cricketRef = ref<HTMLElement | null>(null);
 const lineRef = ref<SVGSVGElement | null>(null);
@@ -52,6 +56,7 @@ const animateBall = () => {
   }
 
   const ball = ballRef.value;
+  const ballBoom = ballBoomRef.value;
   const bat = batRef.value;
   const cricket = cricketRef.value;
   const schedule = cricket.querySelector('.cricket-schedule');
@@ -154,13 +159,36 @@ const animateBall = () => {
     },
     '<',
   );
+
+  // 9. Уменьшение мяча
+  tl.to(
+    ball,
+    {
+      scale: 0,
+      duration: 0.2,
+      ease: 'linear',
+      delay: 2,
+    },
+    '>',
+  );
+
+  // 10. Появление взрыва
+  tl.to(
+    ballBoom,
+    {
+      scale: 1.7,
+      duration: 0.2,
+      ease: 'linear.out',
+    },
+    '-=0.2',
+  );
 };
 </script>
 
 <style lang="postcss" scoped>
 .trajectory {
   position: absolute;
-  top: 0;
+  top: 0.7vw;
   left: 0;
   width: 100%;
   height: 100%;
@@ -240,6 +268,14 @@ const animateBall = () => {
   width: 7vw;
   height: 7vw;
   z-index: 2;
+}
+
+.cricket-container-ball._boom {
+  transform: translate3d(0vw, -25vw, 0px);
+
+  & .ball {
+    transform: scale(0);
+  }
 }
 
 .ball {
